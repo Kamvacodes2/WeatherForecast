@@ -1,7 +1,125 @@
 'use strict'
 
+'use strict';
 
 const temp = document.getElementById('temp');
+const date = document.getElementById('date-time');
+const currentLocation = document.getElementById('location');
+const condition = document.getElementById('condition');
+const rain = document.getElementById('rain');
+const mainIcon = document.getElementById('icon');
+const uvIndex = document.querySelector('.uv-index');
+const uvText = document.querySelector('.uv-text');
+const sunRise = document.querySelector('.sunrise');
+const sunSet = document.querySelector('.sunset');
+const windSpeed = document.querySelector('.wind-speed');
+const humidity = document.querySelector('.humidity');
+const humidityStatus = document.querySelector('.humidity-status');
+const visibility = document.querySelector('.visibility');
+const visibilityStatus = document.querySelector('.visibility-status');
+const weatherCards = document.querySelector("#weather-cards");
+const celsiusBtn = document.querySelector('.celsius');
+const fahrenheitBtn = document.querySelector('.farhenheit');
+const hourlyBtn = document.querySelector('.hourly');
+const weekBtn = document.querySelector('.week');
+const tempUnit = document.querySelectorAll('.temp-unit');
+const formSearch = document.querySelector('#search');
+const searchInput = document.querySelector('#query');
+
+let currentCity = "";
+let currentUnit = "c";
+let hourlyWeek = "week";
+
+// Input dates and times
+function getDateTime() {
+    let now = new Date(),
+        hour = now.getHours(),
+        minute = now.getMinutes();
+
+    let days = [
+        'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
+    ];
+
+    // Time format 
+    hour = hour % 24;
+
+    if (hour < 10) {
+        hour = '0' + hour;
+    }
+
+    if (minute < 10) {
+        minute = '0' + minute;
+    }
+
+    let dayString = days[now.getDay()];
+    return `${dayString}, ${hour}:${minute}`;
+}
+
+date.innerText = getDateTime();
+
+// Update the time every second
+setInterval(() => {
+    date.innerText = getDateTime();
+}, 1000);
+
+// Fetch public IP to get initial location
+function getPublicIp() {
+    fetch('https://geolocation-db.com/json/', { method: 'GET' })
+        .then((response) => response.json())
+        .then((data) => {
+            currentCity = data.city;
+            getWeather(currentCity, currentUnit, hourlyWeek);
+        });
+}
+
+getPublicIp();
+
+// Fetch weather data
+function getWeather(city, unit, hourlyWeek) {
+    const apiKey = 'F3NNCPQVMW57CD2WNXVMVVU3X';
+    fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${city}?unitGroup=metric&key=${apiKey}&contentType=json`, { method: 'GET' })
+        .then((response) => response.json())
+        .then((data) => {
+            let today = data.currentConditions;
+            temp.innerText = unit === "c" ? today.temp : celsiusToFarenheit(today.temp);
+            currentLocation.innerText = data.resolvedAddress;
+            condition.innerText = today.conditions;
+            rain.innerText = "Perc - " + today.precip + "%";
+            uvIndex.innerText = today.uvindex;
+            windSpeed.innerText = today.windspeed;
+            humidity.innerText = today.humidity + "%";
+            visibility.innerText = today.visibility;
+            measureUvIndex(today.uvindex);
+            humidityStat(today.humidity);
+            visibilityStat(today.visibility);
+            sunRise.innerText = convertTo24HrFormat(today.sunrise);
+            sunSet.innerText = convertTo24HrFormat(today.sunset);
+            mainIcon.src = getIcon(today.icon);
+            if (hourlyWeek === "hourly") {
+                updateForecast(data.days[0].hours, unit, "day");
+            } else {
+                updateForecast(data.days, unit, 'week');
+            }
+        }).catch((error) => {
+            alert('City not found in database');
+        });
+}
+
+// Convert Celsius to Fahrenheit
+function celsiusToFarenheit(temp) {
+    return ((temp * 9) / 5 + 32).toFixed(1);
+}
+
+// UV index calculation function
+function measureUvIndex(uvIndex) {
+    if (uvIndex <= 2) {
+        uvText.innerText = "Low";
+    } else if (uvIndex <= 5) {
+        uvText.innerText = 'Moderate';
+    } else if (uvIndex <= 10) {
+        uvText
+
+/*const temp = document.getElementById('temp');
 const date = document.getElementById('date-time');
 const currentLocation = document.getElementById('location');
 const condition = document.getElementById('condition');
@@ -380,4 +498,4 @@ searchInput.addEventListener('input', (e) => {
 
         a.appendChild(b);
     }
-})
+})*/
